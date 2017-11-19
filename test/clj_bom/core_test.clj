@@ -25,15 +25,15 @@
   (testing "detect-charset"
 
     (let [test-str (.getBytes test-str "UTF-8")]
-      (is (= "UTF-8" (detect-charset (io/input-stream test-str)))))
+      (is (= "UTF-8" (detect-encoding (io/input-stream test-str)))))
     (let [test-str (.getBytes test-str "UTF-16LE")]
-      (is (= "UTF-16LE" (detect-charset (io/input-stream test-str)))))
+      (is (= "UTF-16LE" (detect-encoding (io/input-stream test-str)))))
     (let [test-str (.getBytes test-str "UTF-16BE")]
-      (is (= "UTF-16BE" (detect-charset (io/input-stream test-str)))))
+      (is (= "UTF-16BE" (detect-encoding (io/input-stream test-str)))))
     (let [test-str (.getBytes test-str "UTF-32BE")]
-      (is (= "UTF-32BE" (detect-charset (io/input-stream test-str)))))
+      (is (= "UTF-32BE" (detect-encoding (io/input-stream test-str)))))
     (let [test-str (.getBytes test-str "UTF-32LE")]
-      (is (= "UTF-32LE" (detect-charset (io/input-stream test-str)))))
+      (is (= "UTF-32LE" (detect-encoding (io/input-stream test-str)))))
     )
 
 

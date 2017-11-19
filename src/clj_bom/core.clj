@@ -6,7 +6,7 @@
 (defmacro ^:private defBOM
   [sym doc-str unsigned-ints]
   `(def ~sym ~doc-str
-     {:charset ~doc-str
+     {:charset ~doc-str ;; the doc-string specifies the actual charset
       :bytes (->> ~unsigned-ints
                   (map int)
                   byte-array)})) ;; let the JVM cast the (unsigned) ints to (signed) bytes,
@@ -69,59 +69,58 @@
   "Returns true if <in> starts with the UTF-32BE BOM."
   (partial has-bom? utf32-be-BOM))
 
-(defn detect-charset
+(defn detect-encoding
   "Given an InputStream <in>, attempts to detect the
    character encoding by looking at the first 4 bytes.
    Returns a character encoding (UTF-8, UTF-16LE, UTF-16BE, UTF-32LE, UTF-32BE),
    or nil if no BOM is present."
   [^InputStream in]
   (.mark in 4) ;; mark the start of the stream (allowing 4 bytes to be read before invalidating the mark-position)
-  (let [first-n-bytes (byte-array 4)
-        _n-bytes-read (.read in first-n-bytes)]
-    (.reset in) ;; reset to the starting position
+  (let [first-four-bytes (byte-array 4)]
+    (.read in first-four-bytes) ;; read the first 4 bytes
+    (.reset in)                 ;; and reset to the starting position immediately
     (or
       ;; UTF-8
+      ;; check UTF-8 first as it's the most common
       (when (= (seq (:bytes utf8-BOM))
-               (take 3 first-n-bytes))
+               (take 3 first-four-bytes))
         (:charset utf8-BOM))
       ;; UTF-32
       ;; check for UTF-32 before UTF-16 because UTF-16LE can be confused with UTF-32LE
-      (let [four-bs (seq first-n-bytes)]
-        (cond
-          (= (seq (:bytes utf32-le-BOM))
-             four-bs) (:charset utf32-le-BOM)
-          (= (seq (:bytes utf32-be-BOM))
-             four-bs) (:charset utf32-be-BOM)))
+      (condp = (seq first-four-bytes)
+        (-> utf32-le-BOM :bytes seq) (:charset utf32-le-BOM)
+        (-> utf32-be-BOM :bytes seq) (:charset utf32-be-BOM)
+        nil)
       ;; UTF-16
-      (let [two-bs (take 2 first-n-bytes)]
-        (cond
-          (= (seq (:bytes utf16-le-BOM))
-             two-bs) (:charset utf16-le-BOM)
-          (= (seq (:bytes utf16-be-BOM))
-             two-bs) (:charset utf16-be-BOM))))))
+      (condp = (take 2 first-four-bytes)
+        (-> utf16-le-BOM :bytes seq) (:charset utf16-le-BOM)
+        (-> utf16-be-BOM :bytes seq) (:charset utf16-be-BOM)
+        nil))))
 
 (defn bom-reader
   "Given a source <in> (anything compatible with `io/input-stream`),
    returns a Reader wrapping it. If <in> starts with a BOM,
    the returned reader will have the correct encoding,
-   while skipping the first byte. In the absence of a BOM,
-   this boils down to `(io/reader in)`. Must be called within a
-   `with-open` expression to ensure that the returned Reader (which wraps <in>)
-   is closed appropriately."
-  ^BufferedReader [in]
-  (let [is (io/input-stream in)]
-    (if-let [encoding (detect-charset is)] ;; check to see if any Unicode BOMs match
-      (doto (io/reader is :encoding encoding)
-        (.skip 1))      ;; skip 1 character (the BOM) from the returned Reader
-      (io/reader is)))) ;; do nothing - return a Reader with the default encoding
+   while (optionally) skipping the first byte (depending on <skip-bom?>).
+   In the absence of a BOM, this boils down to `(io/reader in)`.
+   Must be called within a `with-open` expression to ensure that the
+   returned Reader (which wraps <in>) is closed appropriately."
+  (^BufferedReader [in]
+   (bom-reader in true))
+  (^BufferedReader [in skip-bom?]
+   (let [is (io/input-stream in)]
+     (if-let [encoding (detect-encoding is)] ;; check to see if any Unicode BOMs match
+       (cond-> (io/reader is :encoding encoding)
+               skip-bom? (doto (.skip 1)))  ;; skip the first character (the BOM) from the returned Reader
+       (io/reader is)))))                   ;; do nothing - return a Reader with the default encoding
 
 (defn bom-writer
   "Given a target <out> (anything compatible with `io/output-stream`),
    returns a Writer wrapping it. The returned writer will have the correct encoding,
-   and it will add the BOM specified by <bom-var> before anything else."
-  [{:keys [bytes charset] :as the-bom}  out]
+   and it will add the BOM bytes specified by <the-bom> before anything else."
+  [{:keys [^bytes bytes charset] :as the-bom}  out]
   (let [ous (io/output-stream out)]
-    (.write ous ^bytes bytes)
+    (.write ous bytes)
     (io/writer ous :encoding charset)))
 
 

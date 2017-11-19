@@ -21,12 +21,13 @@ The API consists mainly of two functions. These are `bom-reader` and `bom-writer
 
 ### bom-reader
 
-Takes anything compatible with `io/input-stream` (presumably starts with a BOM) and returns a Reader with the correct encoding set, and the first character skipped. In the absence of a BOM, this is equivalent with calling `io/reader` on the InputStream (without options).
+Takes a source (anything compatible with `io/input-stream`) which presumably starts with a BOM, and returns a Reader with the correct encoding, and the first character (the BOM) skipped. In the absence of a BOM, this is equivalent to calling `io/reader` on the source (without options).
 
 ```clj
 (require '[clj-bom :as bom] 
          '[clojure.data.csv :as csv])
 
+;; instead of `io/reader`, use `bom/bom-reader`
 (with-open [reader (bom/bom-reader "in-file-with-BOM.csv")]
   (doall (csv/read-csv reader)))
 ```
@@ -34,12 +35,13 @@ Takes anything compatible with `io/input-stream` (presumably starts with a BOM) 
 
 ### bom-writer
  
-Takes an OutputStream and returns a Writer (with the correct encoding) which will write the specified BOM before anything else.
+Takes a target (anything compatible with `io/output-stream`) and returns a Writer (with the correct encoding) which will write the specified BOM before anything else.
 
 ```clj
 (require '[clj-bom :as bom]
          '[clojure.data.csv :as csv])
 
+;; instead of `io/writer`, use `bom/bom-writer`
 (with-open [writer (bom/bom-writer bom/utf8-BOM "out-file-with-BOM.csv")]
   (csv/write-csv writer
                  [["abc" "def"]
