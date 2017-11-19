@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [clj-bom.core :refer :all]
             [clojure.java.io :as io])
-  (:import (java.io StringWriter)))
+  (:import (java.io StringWriter ByteArrayOutputStream)))
 
 (def ^:private test-str
   (str \uFEFF "whatever"))
@@ -37,7 +37,7 @@
     )
 
 
-  (testing "bom-input-stream->reader"
+  (testing "bom-reader"
     (with-open [rdr (bom-reader (.getBytes test-str "UTF-8"))
                 wrt (StringWriter.)]
       (io/copy rdr wrt)
@@ -56,6 +56,15 @@
       (is (= (subs test-str 1)
              (.toString wrt))))
 
+    )
+
+  (testing "bom-writer"
+
+    (let [target (ByteArrayOutputStream.)]
+      (with-open [wrt (bom-writer "UTF-8" target)]
+        (.write wrt (subs test-str 1))
+        (.flush wrt)
+        (is (= test-str (String. (.toByteArray target))))))
     )
 
   )

@@ -104,7 +104,7 @@
 
 (defn bom-writer
   "Given a target <out> (anything compatible with `io/output-stream`),
-   returns a Writer wrapping it. The returned writer will have the correct encoding,
+   returns a Writer wrapping it. The returned writer will have the <charset> encoding,
    and it will add the BOM bytes specified by <the-bom> before anything else.
    Must be called within a `with-open` expression to ensure that the
    returned Writer is closed appropriately"
@@ -114,8 +114,7 @@
       (.write ous bom-bytes)
       (io/writer ous :encoding charset))
     (throw
-      (IllegalArgumentException.
-        (format "Charset [%s] is NOT recognised!" charset)))))
+      (IllegalArgumentException. (format "Charset [%s] is NOT recognised!" charset)))))
 
 
 (comment
