@@ -5,7 +5,7 @@
 
 (defmacro ^:private defBOM
   [sym doc-str unsigned-ints]
-  `(def ^:private ~sym ~doc-str
+  `(def ~sym ~doc-str
      {:charset ~doc-str
       :bytes (->> ~unsigned-ints
                   (map int)
@@ -101,25 +101,28 @@
              two-bs) (:charset utf16-be-BOM))))))
 
 (defn bom-reader
-  "Given an InputStream <in>, returns a Reader wrapping it.
-   If <in> starts with a BOM, the returned reader will have the correct encoding,
+  "Given a source <in> (anything compatible with `io/input-stream`),
+   returns a Reader wrapping it. If <in> starts with a BOM,
+   the returned reader will have the correct encoding,
    while skipping the first byte. In the absence of a BOM,
    this boils down to `(io/reader in)`. Must be called within a
    `with-open` expression to ensure that the returned Reader (which wraps <in>)
    is closed appropriately."
-  ^BufferedReader [^InputStream in]
-  (if-let [encoding (detect-charset in)] ;; check to see if any Unicode BOMs match
-    (doto (io/reader in :encoding encoding)
-      (.skip 1))      ;; skip 1 character (the BOM) from the returned Reader
-    (io/reader in))) ;; do nothing - return a Reader with the default encoding
+  ^BufferedReader [in]
+  (let [is (io/input-stream in)]
+    (if-let [encoding (detect-charset is)] ;; check to see if any Unicode BOMs match
+      (doto (io/reader is :encoding encoding)
+        (.skip 1))      ;; skip 1 character (the BOM) from the returned Reader
+      (io/reader is)))) ;; do nothing - return a Reader with the default encoding
 
 (defn bom-writer
-  "Given an OutputStream <out>, returns a Writer wrapping it.
-   The returned writer will have the correct encoding,
+  "Given a target <out> (anything compatible with `io/output-stream`),
+   returns a Writer wrapping it. The returned writer will have the correct encoding,
    and it will add the BOM specified by <bom-var> before anything else."
-  [{:keys [bytes charset] :as the-bom} ^OutputStream out]
-  (.write out ^bytes bytes)
-  (io/writer out :encoding charset))
+  [{:keys [bytes charset] :as the-bom}  out]
+  (let [ous (io/output-stream out)]
+    (.write ous ^bytes bytes)
+    (io/writer ous :encoding charset)))
 
 
 (comment
@@ -127,12 +130,12 @@
   ;; all you need to do is first create an input-stream and pass that to 
   ;; `bom-input-stream->reader` which will give you back the reader with 
   ;; the correct encoding and without the first byte.
-  (with-open [reader (bom-reader (io/input-stream "in-file-with-BOM.csv"))]
+  (with-open [reader (bom-reader "in-file-with-BOM.csv")]
     (doall
       (csv/read-csv reader)))
 
   ;; and the opposite - produce a CSV with a BOM (e.g. so that Excel can see the encoding and open it correctly)
-  (with-open [writer (bom-writer utf8-BOM (io/output-stream "out-file-with-BOM.csv"))]
+  (with-open [writer (bom-writer utf8-BOM "out-file-with-BOM.csv")]
     (csv/write-csv writer
                    [["abc" "def"]
                     ["ghi" "jkl"]]))

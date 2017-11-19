@@ -38,22 +38,19 @@
 
 
   (testing "bom-input-stream->reader"
-    (with-open [rdr (bom-reader
-                      (io/input-stream (.getBytes test-str "UTF-8")))
+    (with-open [rdr (bom-reader (.getBytes test-str "UTF-8"))
                 wrt (StringWriter.)]
       (io/copy rdr wrt)
       (is (= (subs test-str 1)
              (.toString wrt))))
 
-    (with-open [rdr (bom-reader
-                      (io/input-stream (.getBytes test-str "UTF-16LE")))
+    (with-open [rdr (bom-reader (.getBytes test-str "UTF-16LE"))
                 wrt (StringWriter.)]
       (io/copy rdr wrt)
       (is (= (subs test-str 1)
              (.toString wrt))))
 
-    (with-open [rdr (bom-reader
-                      (io/input-stream (.getBytes test-str "UTF-16BE")))
+    (with-open [rdr (bom-reader (.getBytes test-str "UTF-16BE"))
                 wrt (StringWriter.)]
       (io/copy rdr wrt)
       (is (= (subs test-str 1)

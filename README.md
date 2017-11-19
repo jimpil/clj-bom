@@ -21,13 +21,13 @@ The API consists mainly of two functions. These are `bom-reader` and `bom-writer
 
 ### bom-reader
 
-Takes an InputStream (presumably one which starts with a BOM) and returns a Reader with the correct encoding set, and the first character skipped. In the absence of a BOM, this is equivalent with calling `io/reader` on the InputStream (without options).
+Takes anything compatible with `io/input-stream` (presumably starts with a BOM) and returns a Reader with the correct encoding set, and the first character skipped. In the absence of a BOM, this is equivalent with calling `io/reader` on the InputStream (without options).
 
 ```clj
 (require '[clj-bom :as bom] 
          '[clojure.data.csv :as csv])
 
-(with-open [reader (bom/bom-reader (io/input-stream "in-file-with-BOM.csv"))]
+(with-open [reader (bom/bom-reader "in-file-with-BOM.csv")]
   (doall (csv/read-csv reader)))
 ```
 
@@ -40,13 +40,13 @@ Takes an OutputStream and returns a Writer (with the correct encoding) which wil
 (require '[clj-bom :as bom]
          '[clojure.data.csv :as csv])
 
-(with-open [writer (bom/bom-writer bom/utf8-BOM (io/output-stream "out-file-with-BOM.csv"))]
+(with-open [writer (bom/bom-writer bom/utf8-BOM "out-file-with-BOM.csv")]
   (csv/write-csv writer
                  [["abc" "def"]
                  ["ghi" "jkl"]]))
 ```
 
-A couple of more helpers are available (e.g. `has-bom?`) but I'm not super convinced of their utility, so will probably removing them soon.
+A couple of more helpers are available (e.g. `has-bom?` variants) but I'm not super convinced of their utility, so will probably removing them soon.
 
 
 ## Alternatives 
