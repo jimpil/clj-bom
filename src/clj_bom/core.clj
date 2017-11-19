@@ -1,7 +1,7 @@
 (ns clj-bom.core
   (:require [clojure.java.io :as io])
   (:import (java.util Arrays)
-           (java.io InputStream BufferedReader BufferedOutputStream OutputStream)))
+           (java.io InputStream Reader Writer)))
 
 (defmacro ^:private defBOM
   [sym doc-str unsigned-ints]
@@ -105,9 +105,9 @@
    In the absence of a BOM, this boils down to `(io/reader in)`.
    Must be called within a `with-open` expression to ensure that the
    returned Reader (which wraps <in>) is closed appropriately."
-  (^BufferedReader [in]
+  (^Reader [in]
    (bom-reader in true))
-  (^BufferedReader [in skip-bom?]
+  (^Reader [in skip-bom?]
    (let [is (io/input-stream in)]
      (if-let [encoding (detect-encoding is)] ;; check to see if any Unicode BOMs match
        (cond-> (io/reader is :encoding encoding)
@@ -118,7 +118,7 @@
   "Given a target <out> (anything compatible with `io/output-stream`),
    returns a Writer wrapping it. The returned writer will have the correct encoding,
    and it will add the BOM bytes specified by <the-bom> before anything else."
-  [{:keys [^bytes bytes charset] :as the-bom}  out]
+  ^Writer [{:keys [^bytes bytes charset] :as the-bom}  out]
   (let [ous (io/output-stream out)]
     (.write ous bytes)
     (io/writer ous :encoding charset)))
