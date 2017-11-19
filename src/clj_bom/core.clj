@@ -126,9 +126,8 @@
 
 (comment
   ;; consider the case where you want to read a CSV file which has a BOM (e.g. produced by Excel).
-  ;; all you need to do is first create an input-stream and pass that to 
-  ;; `bom-input-stream->reader` which will give you back the reader with 
-  ;; the correct encoding and without the first byte.
+  ;; all you need to do is to use `bom-reader` (as opposed to `io/reader`) which will give you back the reader with
+  ;; the correct encoding, and (optionally) without the first character.
   (with-open [reader (bom-reader "in-file-with-BOM.csv")]
     (doall
       (csv/read-csv reader)))
