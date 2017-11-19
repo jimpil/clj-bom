@@ -5,7 +5,7 @@
 
 (defmacro ^:private defBOM
   [sym doc-str unsigned-ints]
-  `(def ~sym ~doc-str
+  `(def ^:private ~sym ~doc-str
      {:charset ~doc-str
       :bytes (->> ~unsigned-ints
                   (map int)
@@ -21,7 +21,7 @@
 
 (defBOM utf16-le-BOM
         "UTF-16LE"
-        [255 254])
+        [255 254]) ;;
 
 (defBOM utf16-be-BOM
         "UTF-16BE"
@@ -35,7 +35,7 @@
         "UTF-32LE"
         [255 254 0 0])
 
-(defn has-bom?
+(defn- has-bom?
   "Given a BOM (Byte-Order-Mark) byte-array <bom>,
    and a source <in> (anything compatible with `io/input-stream`),
    returns true if the first N (`bom.length`) bytes of <in>
@@ -53,6 +53,22 @@
   "Returns true if <in> starts with the UTF-8 BOM."
   (partial has-bom? utf8-BOM))
 
+(def has-utf16be-bom?
+  "Returns true if <in> starts with the UTF-16BE BOM."
+  (partial has-bom? utf16-be-BOM))
+
+(def has-utf16le-bom?
+  "Returns true if <in> starts with the UTF-16LE BOM."
+  (partial has-bom? utf16-le-BOM))
+
+(def has-utf32le-bom?
+  "Returns true if <in> starts with the UTF-32LE BOM."
+  (partial has-bom? utf32-le-BOM))
+
+(def has-utf32be-bom?
+  "Returns true if <in> starts with the UTF-32BE BOM."
+  (partial has-bom? utf32-be-BOM))
+
 (defn detect-charset
   "Given an InputStream <in>, attempts to detect the
    character encoding by looking at the first 4 bytes.
@@ -68,20 +84,21 @@
       (when (= (seq (:bytes utf8-BOM))
                (take 3 first-n-bytes))
         (:charset utf8-BOM))
+      ;; UTF-32
+      ;; check for UTF-32 before UTF-16 because UTF-16LE can be confused with UTF-32LE
+      (let [four-bs (seq first-n-bytes)]
+        (cond
+          (= (seq (:bytes utf32-le-BOM))
+             four-bs) (:charset utf32-le-BOM)
+          (= (seq (:bytes utf32-be-BOM))
+             four-bs) (:charset utf32-be-BOM)))
       ;; UTF-16
       (let [two-bs (take 2 first-n-bytes)]
         (cond
           (= (seq (:bytes utf16-le-BOM))
              two-bs) (:charset utf16-le-BOM)
           (= (seq (:bytes utf16-be-BOM))
-             two-bs) (:charset utf16-be-BOM)))
-      ;; UTF-32
-      (let [four-bs (seq first-n-bytes)]
-        (cond
-          (= (seq (:bytes utf32-le-BOM))
-             four-bs) (:charset utf32-le-BOM)
-          (= (seq (:bytes utf32-be-BOM))
-             four-bs) (:charset utf32-be-BOM))))))
+             two-bs) (:charset utf16-be-BOM))))))
 
 (defn bom-reader
   "Given an InputStream <in>, returns a Reader wrapping it.

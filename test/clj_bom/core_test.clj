@@ -15,11 +15,11 @@
 
   (testing "UTF-16LE"
     (let [test-str (.getBytes test-str "UTF-16LE")]
-      (is (true? (has-bom? utf16-le-BOM test-str)))))
+      (is (true? (has-utf16le-bom? test-str)))))
 
   (testing "UTF-16BE"
     (let [test-str (.getBytes test-str "UTF-16BE")]
-      (is (true? (has-bom? utf16-be-BOM test-str)))))
+      (is (true? (has-utf16be-bom? test-str)))))
 
 
   (testing "detect-charset"
@@ -32,6 +32,8 @@
       (is (= "UTF-16BE" (detect-charset (io/input-stream test-str)))))
     (let [test-str (.getBytes test-str "UTF-32BE")]
       (is (= "UTF-32BE" (detect-charset (io/input-stream test-str)))))
+    (let [test-str (.getBytes test-str "UTF-32LE")]
+      (is (= "UTF-32LE" (detect-charset (io/input-stream test-str)))))
     )
 
 
