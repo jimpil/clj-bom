@@ -9,15 +9,15 @@
 
 (deftest bom-tests
 
-  (testing "UTF-8"
+  (testing "UTF-8 BOM detection"
     (let [test-str (.getBytes test-str "UTF-8")]
       (is (true? (has-utf8-bom? test-str)))))
 
-  (testing "UTF-16LE"
+  (testing "UTF-16LE BOM detection"
     (let [test-str (.getBytes test-str "UTF-16LE")]
       (is (true? (has-utf16le-bom? test-str)))))
 
-  (testing "UTF-16BE"
+  (testing "UTF-16BE BOM detection"
     (let [test-str (.getBytes test-str "UTF-16BE")]
       (is (true? (has-utf16be-bom? test-str)))))
 
