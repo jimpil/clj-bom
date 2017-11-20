@@ -60,6 +60,9 @@ Takes a target (anything compatible with `io/output-stream`) and returns a Write
                  ["ghi" "jkl"]]))
 ```
 
+`bom-input-stream` and `bom-output-stream` behave similarly with `bom-reader` and `bom-writer respectively`. The only difference is that they don't wrap the in/out streams in reader/writer objects.
+
+
 ## Alternatives 
 If you already have `apache.commons.io` in your stack, then I guess `BOMInputStream` is the closest thing to what clj-bom tries to do. It is slightly lower level though. You would need to construct a BOMInputStream, manually detect the encoding, which you use in a subsequent `io/reader` call. 
 
