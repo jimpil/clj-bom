@@ -64,7 +64,8 @@
       (with-open [wrt (bom-writer "UTF-8" target)]
         (.write wrt (subs test-str 1))
         (.flush wrt)
-        (is (= test-str (String. (.toByteArray target))))))
+        (is (= test-str
+               (String. (.toByteArray target))))))
     )
 
   )

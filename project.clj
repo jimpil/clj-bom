@@ -1,5 +1,5 @@
-(defproject clj-bom "0.1.0-SNAPSHOT"
-  :description "BOM (Byte-Order-Mark) utilities for Clojure"
+(defproject clj-bom "0.1.2-SNAPSHOT"
+  :description "BOM (Byte-Order-Mark) reader/writer for Clojure"
   :url "https://github.com/jimpil/clj-bom"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}

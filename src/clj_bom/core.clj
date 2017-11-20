@@ -107,28 +107,11 @@
    returns a Writer wrapping it. The returned writer will have the <charset> encoding,
    and it will add the BOM bytes specified by <the-bom> before anything else.
    Must be called within a `with-open` expression to ensure that the
-   returned Writer is closed appropriately"
+   returned Writer is closed appropriately."
   ^Writer [charset out]
   (if-let [^bytes bom-bytes (get BOMs charset)]
     (let [ous (io/output-stream out)]
       (.write ous bom-bytes)
       (io/writer ous :encoding charset))
     (throw
-      (IllegalArgumentException. (format "Charset [%s] is NOT recognised!" charset)))))
-
-
-(comment
-  ;; consider the case where you want to read a CSV file which has a BOM (e.g. produced by Excel).
-  ;; all you need to do is to use `bom-reader` (as opposed to `io/reader`) which will give you back the reader with
-  ;; the correct encoding, and (optionally) without the first character.
-  (with-open [reader (bom-reader "in-file-with-BOM.csv")]
-    (doall
-      (csv/read-csv reader)))
-
-  ;; and the opposite - produce a CSV with a BOM (e.g. so that Excel can see the encoding and open it correctly)
-  (with-open [writer (bom-writer "UTF-8" "out-file-with-BOM.csv")]
-    (csv/write-csv writer
-                   [["abc" "def"]
-                    ["ghi" "jkl"]]))
-
-  )
+      (IllegalArgumentException. (format "Character encoding [%s] is NOT recognised!" charset)))))
