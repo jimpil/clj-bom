@@ -1,7 +1,7 @@
 (ns clj-bom.core
   (:require [clojure.java.io :as io])
   (:import (java.util Arrays)
-           (java.io InputStream Reader Writer)))
+           (java.io InputStream Reader Writer OutputStream)))
 
 (defn- bom-bytes
   [unsigned-ints]
@@ -102,6 +102,19 @@
                skip-bom? (doto (.skip 1)))  ;; skip the first character (the BOM) from the returned Reader
        (io/reader is)))))                   ;; do nothing - return a Reader with the default encoding
 
+
+(defn bom-input-stream
+  "Same as `bom-reader`, but returning an InputStream instead of a Reader."
+  (^InputStream [in]
+   (bom-input-stream in true))
+  (^InputStream [in skip-bom?]
+   (let [is (io/input-stream in)]
+     (if-let [encoding (detect-encoding is)] ;; check to see if any Unicode BOMs match
+       (cond-> is
+               ;; skip the first few bytes (the BOM) from the returned InputStream
+               skip-bom? (doto (.skip (alength ^bytes (get BOMs encoding)))))
+       is))))
+
 (defn bom-writer
   "Given a target <out> (anything compatible with `io/output-stream`),
    returns a Writer wrapping it. The returned writer will have the <charset> encoding,
@@ -113,5 +126,16 @@
     (let [ous (io/output-stream out)]
       (.write ous bom-bytes)
       (io/writer ous :encoding charset))
+    (throw
+      (IllegalArgumentException. (format "Character encoding [%s] is NOT recognised!" charset)))))
+
+
+(defn bom-output-stream
+  "Same as `bom-writer`, but returning an OutputStream, instead of a Writer."
+  ^OutputStream [charset out]
+  (if-let [^bytes bom-bytes (get BOMs charset)]
+    (let [ous (io/output-stream out)]
+      (.write ous bom-bytes)
+      ous)
     (throw
       (IllegalArgumentException. (format "Character encoding [%s] is NOT recognised!" charset)))))
