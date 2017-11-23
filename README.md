@@ -36,7 +36,7 @@ The API consists mainly of two functions. These are `bom-reader` and `bom-writer
 Takes a source (anything compatible with `io/input-stream`) which presumably starts with a BOM, and returns a Reader with the correct encoding, and the first character (the BOM) skipped (optionally). In the absence of a BOM, this is equivalent to calling `(io/reader source)`.
 
 ```clj
-(require '[clj-bom :as bom] 
+(require '[clj-bom.core :as bom] 
          '[clojure.data.csv :as csv])
 
 ;; instead of `io/reader`, use `bom/bom-reader`
@@ -50,7 +50,7 @@ Takes a source (anything compatible with `io/input-stream`) which presumably sta
 Takes a target (anything compatible with `io/output-stream`) and returns a Writer (with the specified encoding) which will write the appropriate BOM before anything else.
 
 ```clj
-(require '[clj-bom :as bom]
+(require '[clj-bom.core :as bom]
          '[clojure.data.csv :as csv])
 
 ;; instead of `io/writer`, use `bom/bom-writer`
