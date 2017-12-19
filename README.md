@@ -16,7 +16,7 @@ See [Wikipedia entry](https://en.wikipedia.org/wiki/Byte_order_mark)
 
 ## Where 
 
-[![Clojars Project](https://img.shields.io/clojars/v/clj-bom.svg)](https://clojars.org/clj-bom)
+[![Clojars Project](https://clojars.org/clj-bom/latest-version.svg)](https://clojars.org/clj-bom)
 
 ## Why 
 
